@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Sales Report</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css"
+    />
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row mt-2 mb-3">
+        <div class="col-md-12 mb-2 mt-3">
+          <h3 class="text-center" style="color: tomato">
+            Super shop Sales Report Generate   
+          </h3>
+
+          <button class="btn-dark download_pdf">Download pdf</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <div class="card py-2 px-3">
+            <p>1.Total number of orders count per year:</p>
+            <table class="table bordered">
+              <thead class="thead-dark">
+                <tr>
+                  <th scope="col">Year</th>
+                  <th scope="col">Order Counts</th>
+                </tr>
+              </thead>
+              <tbody>
+                {%for obj in order_per_year %}
+                <tr>
+                  <td>{{obj.order_date__year}}</td>
+                  <td>{{obj.order_count}}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="card py-2 px-3">
+            <p>
+              2.Top 3 customers who have ordered the most with their total
+              amount of transactions:
+            </p>
+            <table class="table">
+              <thead class="thead-dark">
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Count</th>
+
+                  <th scope="col">Transaction</th>
+                </tr>
+              </thead>
+              <tbody>
+                {%for obj in top_customers %}
+                <tr>
+                  <td>{{obj.customer_name}}</td>
+                  <td>{{obj.order_count}}</td>
+                  <td>{{obj.sale_transaction}}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="card py-2 px-3">
+            <p>
+              3. Customer Transactions per Year (from the beginning year to last
+              year) :
+            </p>
+            <table class="table">
+              <thead class="thead-dark">
+                <tr>
+                  <th scope="col">Year</th>
+                  <th scope="col">Transaction</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for obj in customer_transaction %}
+                <tr>
+                  <td>{{obj.order_date__year}}</td>
+                  <td>{{obj.sale_transaction}}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="card py-2 px-3">
+            <p>4.Most selling items sub-category names :</p>
+            <table class="table">
+              <thead class="thead-dark">
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Sale Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for obj in sub_catgory_count %}
+                <tr>
+                  <td>{{obj.sub_category}}</td>
+                  <td>{{obj.count}}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+   
+        <div class="co-md-6 mb-3 mx-auto">
+          <p>5. Region basis sales performance pie chart:</p>
+          <canvas id="pieChart"></canvas>
+        </div>
+
+        <div class="co-md-6 mb-3 mx-auto">
+          <p>5. Sales performance line chart over the years::</p>
+          <canvas id="lineChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+      integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+      integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+      const ctx = document.getElementById("pieChart");
+      const line = document.getElementById("lineChart");
+      const pie_label=[]
+      const pie_data=[]
+      const pie_lable_data=`
+      {% for obj in region_transaction_data.region %}
+        ${pie_label.push("{{obj}}")}
+      {% endfor %}
+      `
+      const pie_ready_data=`
+      {% for obj in region_transaction_data.transaction %}
+        ${pie_data.push("{{obj}}")}
+      {% endfor %}
+      `
+      const line_label=[]
+      const line_data=[]
+      const line_lable_data=`
+      {% for obj in customer_transaction_line_data.order_year %}
+        ${line_label.push("{{obj}}")}
+      {% endfor %}
+      `
+      const line_ready_data=`
+      {% for obj in customer_transaction_line_data.transaction %}
+        ${line_data.push("{{obj}}")}
+      {% endfor %}
+    `
+      console.log(line_label,line_data)
+      new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: pie_label,
+          datasets: [
+            {
+              label: "# of Votes",
+              data: pie_data,
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+
+      new Chart(line, {
+        type: "line",
+        data: {
+          labels: line_label,
+          datasets: [
+            {
+              label: "# of Votes",
+              data: line_data,
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+
+      $(".download_pdf").on("click",function(){
+         print($("body"))
+      })
+    </script>
+
+
+
+  </body>
+</html>
